@@ -332,7 +332,7 @@ BOOL Nand::enumerateNand(void)
 						spareSz = 0x200000;
 						break;
 					default:
-						DbgLog::GetInstance().log("unknown T%s NAND size! (%x)\n", ((configSave >> 4) & 0x3), (configSave >> 4) & 0x3);
+						DbgLog::GetInstance().log("unknown T%u NAND size! (%x)\n", ((configSave >> 4) & 0x3), (configSave >> 4) & 0x3);
 						return FALSE;
 				}
 				break;
@@ -358,8 +358,23 @@ BOOL Nand::enumerateNand(void)
 						w_blockOff = 0x80000; // start of the block
 						w_patchOff = 0x11000; // start of patches in the block
 						break;
+					case 3: // 1GB NAND: 256KB data / 264KB raw erase blocks
+						isBigBlockCont = TRUE;
+						isBigBlock = TRUE;
+						// DashLaunch only transfers the 64MB system area, as it does
+						// for 256MB and 512MB big-block NANDs.
+						nandInfo.dumpSize = 0x4200000;
+						nandInfo.blockSize = 0x42000;
+						dataSz = 0x4000000;
+						spareSz = 0x200000;
+						pagesPerBlock = 512;
+						w_updateSize = 0x40000; // one 256KB erase block
+						w_writeSize = 0x40000;
+						w_blockOff = 0x100000; // default; image header overrides this
+						w_patchOff = 0;
+						break;
 					default:
-						DbgLog::GetInstance().log("unknown T%s NAND size! (%x)\n", ((configSave >> 4) & 0x3), (configSave >> 4) & 0x3);
+						DbgLog::GetInstance().log("unknown T%u NAND size! (%x)\n", ((configSave >> 4) & 0x3), (configSave >> 4) & 0x3);
 						return FALSE;
 				}
 				break;
@@ -391,10 +406,23 @@ BOOL Nand::enumerateNand(void)
 						w_blockOff = 0x80000; // start of the block
 						w_patchOff = 0x11000; // start of patches in the block
 						break;
-					//case 3: // big block, but with blocks twice the size of known big blocks above...
-					//	break;
+					case 3: // 1GB NAND: 256KB data / 264KB raw erase blocks
+						isBigBlockCont = TRUE;
+						isBigBlock = TRUE;
+						// DashLaunch only transfers the 64MB system area, as it does
+						// for 256MB and 512MB big-block NANDs.
+						nandInfo.dumpSize = 0x4200000;
+						nandInfo.blockSize = 0x42000;
+						dataSz = 0x4000000;
+						spareSz = 0x200000;
+						pagesPerBlock = 512;
+						w_updateSize = 0x40000; // one 256KB erase block
+						w_writeSize = 0x40000;
+						w_blockOff = 0x100000; // default; image header overrides this
+						w_patchOff = 0;
+						break;
 					default:
-						DbgLog::GetInstance().log("unknown T%s NAND size! (%x)\n", ((configSave >> 4) & 0x3), (configSave >> 4) & 0x3);
+						DbgLog::GetInstance().log("unknown T%u NAND size! (%x)\n", ((configSave >> 4) & 0x3), (configSave >> 4) & 0x3);
 						return FALSE;
 				}
 				break;
@@ -927,12 +955,12 @@ BOOL Nand::enumImageType(void)
 		else
 			w_blockOff += fhdr->dwPatchSlotSize;
 		w_patchOff = 0;
-		if(w_updateSize == 0x20000) 
+		if(isBigBlock)
 		{
-			if((w_blockOff%0x20000) != 0)// some xebuild images had big block with patch slot in the middle of a block
+			if((w_blockOff%w_writeSize) != 0)// some xebuild images have a patch slot in the middle of an erase block
 			{
 				DWORD origOff = w_blockOff;
-				w_blockOff = w_blockOff&~(0x20000-1); // align block read to the start of the block
+				w_blockOff = w_blockOff&~(w_writeSize-1); // align block read to the start of the block
 				w_patchOff = origOff - w_blockOff;// start of patches in the block
 			}
 		}
