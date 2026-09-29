@@ -339,13 +339,13 @@ BOOL Nand::enumerateNand(void)
 			case 1: // big block flash controller
 				switch ((configSave >> 4) & 0x3)// TODO: FIND OUT FOR 64M!!! IF THERE IS ONE!!!
 				{
-					case 1: // Small block 16MB setup
+					case 1: // Big on Small 16MB setup
 						isBigBlockCont = TRUE;
 						nandInfo.dumpSize = 0x1080000;
 						dataSz = 0x1000000;
 						spareSz = 0x80000;
 						break;
-					case 2: // Large Block: Current Jasper 256MB and 512MB
+					case 2: // Big Block: PSB 128MB/256MB/512MB with 2KB Page/128KB Block
 						isBigBlockCont = TRUE;
 						isBigBlock = TRUE;
 						nandInfo.dumpSize = 0x4200000;
@@ -358,19 +358,17 @@ BOOL Nand::enumerateNand(void)
 						w_blockOff = 0x80000; // start of the block
 						w_patchOff = 0x11000; // start of patches in the block
 						break;
-					case 3: // 1GB NAND: 256KB data / 264KB raw erase blocks
+					case 3: // Bigger Block: PSB 256MB/512MB/1024MB with 4KB Page/256KB Block
 						isBigBlockCont = TRUE;
 						isBigBlock = TRUE;
-						// DashLaunch only transfers the 64MB system area, as it does
-						// for 256MB and 512MB big-block NANDs.
 						nandInfo.dumpSize = 0x4200000;
 						nandInfo.blockSize = 0x42000;
 						dataSz = 0x4000000;
 						spareSz = 0x200000;
 						pagesPerBlock = 512;
-						w_updateSize = 0x40000; // one 256KB erase block
+						w_updateSize = 0x40000; // one block 256KB
 						w_writeSize = 0x40000;
-						w_blockOff = 0x100000; // default; image header overrides this
+						w_blockOff = 0x100000;
 						w_patchOff = 0;
 						break;
 					default:
@@ -381,7 +379,7 @@ BOOL Nand::enumerateNand(void)
 			case 2: // MMC capable big block flash controller ie: 16M corona 000431c4
 				switch ((configSave >> 4) & 0x3) 
 				{
-					case 0: // 16M
+					case 0: // Big on Small 16MB setup
 						isBigBlockCont = TRUE;
 						nandInfo.dumpSize = 0x1080000;
 						dataSz = 0x1000000;
@@ -393,7 +391,7 @@ BOOL Nand::enumerateNand(void)
 						dataSz = 0x4000000;
 						spareSz = 0x200000;
 						break;
-					case 2: // Big Block
+					case 2: // Big Block: KSB 128MB/256MB/512MB with 2KB Page/128KB Block
 						isBigBlockCont = TRUE;
 						isBigBlock = TRUE;
 						nandInfo.dumpSize = 0x4200000;
@@ -406,19 +404,17 @@ BOOL Nand::enumerateNand(void)
 						w_blockOff = 0x80000; // start of the block
 						w_patchOff = 0x11000; // start of patches in the block
 						break;
-					case 3: // 1GB NAND: 256KB data / 264KB raw erase blocks
+					case 3: // Bigger Block: KSB 256MB/512MB/1024MB with 4KB Page/256KB Block
 						isBigBlockCont = TRUE;
 						isBigBlock = TRUE;
-						// DashLaunch only transfers the 64MB system area, as it does
-						// for 256MB and 512MB big-block NANDs.
 						nandInfo.dumpSize = 0x4200000;
 						nandInfo.blockSize = 0x42000;
 						dataSz = 0x4000000;
 						spareSz = 0x200000;
 						pagesPerBlock = 512;
-						w_updateSize = 0x40000; // one 256KB erase block
+						w_updateSize = 0x40000; // one block 256KB
 						w_writeSize = 0x40000;
-						w_blockOff = 0x100000; // default; image header overrides this
+						w_blockOff = 0x100000;
 						w_patchOff = 0;
 						break;
 					default:
